@@ -11,7 +11,9 @@ RUN npm run build
 FROM nginx:alpine
 RUN addgroup -S appuser && adduser -S appuser -G appuser \
  && mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp \
- && chown -R appuser:appuser /var/cache/nginx
+ && chown -R appuser:appuser /var/cache/nginx \
+ && mkdir -p /run \
+ && chown appuser:appuser /run
 WORKDIR /usr/share/nginx/html
 
 COPY --from=build /app/build ./
