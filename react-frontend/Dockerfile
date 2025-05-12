@@ -1,15 +1,21 @@
-FROM node:16-alpine AS build
+# builder stage
+FROM node:16-alpine AS builder
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile && yarn cache clean
-COPY public ./public
-COPY src ./src
-RUN yarn build
 
+# copy package.json + package-lock.json (not yarn.lock) and your .env
+COPY package.json package-lock.json .env ./
+
+# install dependencies
+RUN npm ci && npm cache clean --force
+
+# copy source and build
+COPY public ./public
+COPY src    ./src
+RUN npm run build
+
+
+# 2) serve with nginx
 FROM nginx:alpine
-RUN addgroup -S appuser && adduser -S appuser -G appuser
-WORKDIR /usr/share/nginx/html
-COPY --from=build /app/build ./
-VOLUME ["/etc/nginx/conf.d"]
-USER appuser
+COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80
 
